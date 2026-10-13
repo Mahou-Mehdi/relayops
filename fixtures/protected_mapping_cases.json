@@ -1,0 +1,18 @@
+[
+  {"name":"ordinary_fractional_quantity","quantity":"2.5","unitPrice":"12.34","expected":"30.85"},
+  {"name":"whole_quantity_regression","quantity":"3","unitPrice":"10","expected":"30.00"},
+  {"name":"zero_quantity","quantity":"0","unitPrice":"123.45","expected":"0.00"},
+  {"name":"zero_price","quantity":"123.456","unitPrice":"0","expected":"0.00"},
+  {"name":"half_cent_rounds_up","quantity":"1","unitPrice":"0.005","expected":"0.01"},
+  {"name":"below_half_cent","quantity":"1","unitPrice":"0.004999","expected":"0.00"},
+  {"name":"above_half_cent","quantity":"1","unitPrice":"0.005001","expected":"0.01"},
+  {"name":"round_final_product_only","quantity":"3","unitPrice":"0.333333","expected":"1.00"},
+  {"name":"fractional_quantity_half_cent","quantity":"0.125","unitPrice":"0.2","expected":"0.03"},
+  {"name":"decimal_not_binary_float","quantity":"1","unitPrice":"1.005","expected":"1.01"},
+  {"name":"large_integer_precision","quantity":"9007199254740993","unitPrice":"0.01","expected":"90071992547409.93"},
+  {"name":"large_amount_retains_cents","quantity":"999999999.999","unitPrice":"999.999","expected":"999998999999.00"},
+  {"name":"tiny_quantity","quantity":"0.000001","unitPrice":"999999.999999","expected":"1.00"},
+  {"name":"no_premature_price_rounding","quantity":"1000","unitPrice":"0.000005","expected":"0.01"},
+  {"name":"ordinary_two_cent_total","quantity":"0.2","unitPrice":"0.1","expected":"0.02"},
+  {"name":"carry_to_next_unit","quantity":"1","unitPrice":"9.999","expected":"10.00"}
+]
