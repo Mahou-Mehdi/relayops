@@ -1,10 +1,12 @@
 # Roadmap: from local incident lab to agent control center
 
-This document describes planned work. The implemented release is the local v0.1 described in the [README](../README.md). The schedule below is a planning range of approximately **16–22 weeks at 20 hours per week**, not a delivery commitment or a claim of completed experience. Each stage has an observable exit condition; scope should change when experiments show that a proposed feature is not useful.
+This document describes planned work. The implemented release is the local v0.2 described in the [README](../README.md). The schedule below is a planning range of approximately **16–22 weeks at 20 hours per week**, not a delivery commitment or a claim of completed experience. Each stage has an observable exit condition; scope should change when experiments show that a proposed feature is not useful.
 
 ## Current foundation
 
 v0.1 already joins an actual LangGraph investigation loop, a model transport, a domain-controlled approval workflow, durable local records, fictional ERP recovery, and independently checked expression patches in one interface. It establishes the workflow and its boundaries. It does not yet implement general code execution, multiagent orchestration, a remote integration queue, or comparative model evaluations.
+
+v0.2 adds outcome-based regression grading, saved evaluation history, report downloads, and retained CI evidence. These are completed foundations for Stage 5; the larger dataset and comparative model experiments below remain future work.
 
 ## Stage 1 — Durable control and remote effects
 

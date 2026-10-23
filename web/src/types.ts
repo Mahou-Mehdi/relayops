@@ -123,12 +123,28 @@ export interface CaseDetail extends CaseSummary {
   repair: Repair | null;
   target: Record<string, unknown>;
 }
-export interface Evaluation {
+export interface EvaluationSummary {
+  id: string;
+  schema_version: number;
+  suite_version: string;
+  app_version: string;
   kind: string;
   model_evaluation: boolean;
-  generated_at: string | null;
+  generated_at: string;
   total: number;
   passed: number;
+  checks_total: number;
+  checks_passed: number;
+  duration_ms: number;
+}
+export interface EvaluationCheck {
+  id: string;
+  label: string;
+  passed: boolean;
+  expected: unknown;
+  actual: unknown;
+}
+export interface Evaluation extends EvaluationSummary {
   results: {
     scenario_id: string;
     title: string;
@@ -136,6 +152,9 @@ export interface Evaluation {
     actual: unknown;
     passed: boolean;
     duration_ms: number;
+    run_status: string | null;
+    error: string | null;
+    checks: EvaluationCheck[];
   }[];
   limitations: string[];
 }

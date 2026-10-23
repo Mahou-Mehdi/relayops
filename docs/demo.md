@@ -59,15 +59,15 @@ For reproducible cancellation, concurrency, tampering, and restart checks, use t
 
 ## Run the regression lab
 
-Choose **Evaluations → Run regression** as Operator. The server creates an isolated temporary database and exercises all eight deterministic scenarios. Inspect expected versus actual actions and actual measured durations. Saved cases are unaffected.
+Choose **Evaluations → Run regression** as Operator. The server creates an isolated temporary database and exercises all eight deterministic scenarios. Expand a scenario to inspect each outcome check, including expected and actual values. Diagnosis, approval, recovery, repair export, and no-effect assertions are checked where relevant. Saved cases are unaffected.
 
 The same report is available from the repository root:
 
 ```powershell
-.\.venv\Scripts\python.exe -m relayops --evaluate
+.\.venv\Scripts\python.exe -m relayops --evaluate --report runtime/evaluation-report.json
 ```
 
-On Unix use `.venv/bin/python`. The dashboard report is kept only for the current server session. These checks are authored system regressions, not held-out model evaluations or an accuracy leaderboard.
+On Unix use `.venv/bin/python`. Dashboard reports survive restarts in the workspace database; select an older run and download its JSON to retain its precise evidence. CLI reports are saved only to the explicitly requested file, not dashboard history. These checks are authored system regressions, not held-out model evaluations or an accuracy leaderboard. See [evaluations.md](evaluations.md) for the report contract and failure handling.
 
 ## Optional live session
 

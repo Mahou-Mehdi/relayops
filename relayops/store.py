@@ -40,7 +40,11 @@ CREATE INDEX IF NOT EXISTS runs_by_case ON runs(case_id);
 CREATE INDEX IF NOT EXISTS proposals_by_case ON proposals(case_id);
 CREATE INDEX IF NOT EXISTS operations_by_case ON operations(case_id);
 CREATE INDEX IF NOT EXISTS events_by_case ON events(case_id, sequence);
-PRAGMA user_version = 1;
+CREATE TABLE IF NOT EXISTS evaluations (
+  sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+  id TEXT NOT NULL UNIQUE, generated_at TEXT NOT NULL, body TEXT NOT NULL
+);
+PRAGMA user_version = 2;
 """
 
 

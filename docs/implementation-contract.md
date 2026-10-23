@@ -1,4 +1,4 @@
-# RelayOps v0.1 implementation contract
+# RelayOps v0.2 implementation contract
 
 Developer reference for the local, single-process control center and its SQLite operation ledger. PostgreSQL/multi-host scheduling and live SAP writes remain roadmap items. The React/TypeScript frontend calls a FastAPI backend with a LangGraph investigation graph and fixture or OpenAI Responses providers. Fixture mode requires no model key and is explicitly labelled deterministic.
 
@@ -18,11 +18,17 @@ Local personas in X-RelayOps-Role header: operator, reviewer, observer. Public d
 - POST /api/cases/{id}/repair {mode:'fixture'|'openai'} -> case detail; operator; synchronous bounded transform verification
 - GET /api/cases/{id}/report -> downloadable JSON (fetch with role header then Blob)
 - GET /api/cases/{id}/patch -> downloadable diff; requires an executed export proposal and verification matching the current patch hash
-- GET /api/evaluations -> {kind:'deterministic-regression', model_evaluation:false, generated_at, total, passed, results:[{scenario_id,title,expected,actual,passed,duration_ms}], limitations:[...]}; initial response {total:0,passed:0,results:[],...}
-- POST /api/evaluations/run {} -> above; operator; isolated temporary databases, never modifies case history
+- GET /api/evaluations -> latest saved full report; initial response {id:null,total:0,passed:0,checks_total:0,checks_passed:0,results:[],...}
+- GET /api/evaluations/history?limit=20 -> saved report summaries, newest completion first; limit 1–100
+- GET /api/evaluations/{id} -> exact saved full report, or 404
+- GET /api/evaluations/{id}/report -> exact saved JSON as an attachment
+- POST /api/evaluations/run {} -> evaluates and saves a full report; operator only; simulated actions use a temporary database, never the live case history; overlapping run returns 409
 - GET /api/knowledge -> array {id,title,body}
 
 Error HTTP 4xx/5xx {detail:string}. Poll every 1s while a run queued/running/cancel_requested; cleanup timers on unmount. Only provider-reported token usage is displayed; no simulated AI cost numbers.
+
+Evaluation summary: {id,generated_at,schema_version:1,suite_version:'2',app_version,kind:'deterministic-regression',model_evaluation:false,total,passed,checks_total,checks_passed,duration_ms}.
+Full report adds {results:[{scenario_id,title,expected,actual,passed,duration_ms,run_status,error,checks:[{id,label,passed,expected,actual}]}],limitations:[]}. Counts `total` and `passed` refer to scenarios. `checks_total` and `checks_passed` refer to recorded checks within those scenarios. A scenario exception records a failure and does not abort the other scenarios. No check count is a model-quality score.
 
 Case summary: {id,title,scenario_id,category,severity,status,order_id,job_id,created_at,updated_at,revision,latest_run_status:string|null}
 Case detail adds {evidence: Evidence[], runs:Run[], proposals:Proposal[], events:Event[], operations:Operation[], diagnosis:Diagnosis|null, repair:Repair|null, target:object}.
@@ -51,7 +57,7 @@ Store(path) SQLite and methods in store.py (thread-safe separate connections). D
 
 DomainError(message,status_code=400). All JSON serializable. Scenarios scenario IDs: transient-outage, lost-acknowledgement, mapping-defect, authorization-denied, business-rejection, misleading-log, insufficient-evidence, healthy-export.
 
-Embedded ERP simulator ledger is distinct from operation ledger; immutable key/payload receipt semantics, explicit fictional data. For v0.1 it is an in-process deterministic target, not real SAP or network. Lost acknowledgement seeded with target receipt but missing local receipt; execute reconcile recovers it. Targets must be scoped to case/order/job; revision/hash/expiry checks, one operation identity, safe duplicate approval/execute, outcome verification. No real company services accessed.
+Embedded ERP simulator ledger is distinct from operation ledger; immutable key/payload receipt semantics, explicit fictional data. This release uses an in-process deterministic target, not real SAP or network. Lost acknowledgement seeded with target receipt but missing local receipt; execute reconcile recovers it. Targets must be scoped to case/order/job; revision/hash/expiry checks, one operation identity, safe duplicate approval/execute, outcome verification. No real company services accessed.
 
 ## Coding interface
 

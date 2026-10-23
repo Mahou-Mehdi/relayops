@@ -40,4 +40,12 @@ jobs:
       - name: Test backend and integration boundaries
         run: python -m pytest
       - name: Run isolated deterministic regression suite
-        run: python -m relayops --evaluate
+        run: python -m relayops --evaluate --report runtime/evaluation-report.json
+      - name: Retain the evaluation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaluation-python-${{ matrix.python }}
+          path: runtime/evaluation-report.json
+          if-no-files-found: warn
+          retention-days: 30

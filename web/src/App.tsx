@@ -27,6 +27,7 @@ import {
   CircleDot,
 } from 'lucide-react';
 import { api, downloadReport, downloadPatch } from './api';
+import EvaluationPanel from './EvaluationPanel';
 import {
   activeRun,
   canOperate,
@@ -39,7 +40,6 @@ import type {
   CaseDetail,
   CaseSummary,
   Config,
-  Evaluation,
   Evidence,
   Knowledge,
   Mode,
@@ -120,7 +120,7 @@ export default function App() {
   const [cases, setCases] = useState<CaseSummary[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [detail, setDetail] = useState<CaseDetail | null>(null);
-  const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
+  const [evaluationRefresh, setEvaluationRefresh] = useState(0);
   const [knowledge, setKnowledge] = useState<Knowledge[]>([]);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
@@ -177,17 +177,16 @@ export default function App() {
 
   const loadAll = useCallback(
     async (signal?: AbortSignal) => {
-      const [configuration, scenarioList, caseList, evalReport, articles] = await Promise.all([
+      const [configuration, scenarioList, caseList, articles] = await Promise.all([
         api<Config>('/config', role, undefined, signal),
         api<Scenario[]>('/scenarios', role, undefined, signal),
         api<CaseSummary[]>('/cases', role, undefined, signal),
-        api<Evaluation>('/evaluations', role, undefined, signal),
         api<Knowledge[]>('/knowledge', role, undefined, signal),
       ]);
       setConfig(configuration);
       setScenarios(scenarioList);
       setCases(caseList);
-      setEvaluation(evalReport);
+      setEvaluationRefresh((value) => value + 1);
       setKnowledge(articles);
       setSelected((previous) => previous || caseList[0]?.id || null);
     },
@@ -1104,106 +1103,15 @@ export default function App() {
                   </>
                 )}
 
-                {page === 'evaluations' && (
-                  <section className="evaluation-panel panel">
-                    <div className="evaluation-hero">
-                      <div className="eval-symbol">
-                        <FileCheck2 size={28} />
-                      </div>
-                      <div>
-                        <p className="eyebrow">DETERMINISTIC REGRESSION</p>
-                        <h2>
-                          {evaluation?.total
-                            ? `${evaluation.passed} of ${evaluation.total} checks passed`
-                            : 'Ready for a baseline run'}
-                        </h2>
-                        <p>
-                          {evaluation?.generated_at
-                            ? `Last run ${date(evaluation.generated_at)}`
-                            : 'Run the supported scenarios against isolated temporary databases.'}
-                        </p>
-                      </div>
-                      <button
-                        className="button"
-                        disabled={!canOperate(role) || !!busy}
-                        onClick={() =>
-                          mutate('evaluate', async () => {
-                            setEvaluation(await api<Evaluation>('/evaluations/run', role, {}));
-                            setNotice(
-                              'Deterministic regression completed. Case history was not modified.',
-                            );
-                          })
-                        }
-                      >
-                        {busy === 'evaluate' ? (
-                          <LoaderCircle className="spin" size={16} />
-                        ) : (
-                          <Play size={14} />
-                        )}
-                        Run regression
-                      </button>
-                    </div>
-                    <div className="evaluation-disclaimer">
-                      <AlertCircle size={16} />
-                      <p>
-                        These checks verify deterministic system behavior. They do not measure an AI
-                        model's accuracy, reliability, or performance on unseen incidents.
-                      </p>
-                    </div>
-                    {evaluation?.results.length ? (
-                      <div className="evaluation-table-wrap">
-                        <table className="evaluation-table">
-                          <thead>
-                            <tr>
-                              <th>Scenario</th>
-                              <th>Result</th>
-                              <th>Duration</th>
-                              <th>Evidence</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {evaluation.results.map((result) => (
-                              <tr key={result.scenario_id}>
-                                <td>
-                                  <strong>{result.title}</strong>
-                                  <small>{result.scenario_id}</small>
-                                </td>
-                                <td>
-                                  <Badge tone={result.passed ? 'green' : 'red'}>
-                                    {result.passed ? <Check size={12} /> : <X size={12} />}{' '}
-                                    {result.passed ? 'Passed' : 'Failed'}
-                                  </Badge>
-                                </td>
-                                <td className="mono">{Math.round(result.duration_ms)} ms</td>
-                                <td>
-                                  <JsonDetails
-                                    title="Expected / actual"
-                                    value={{ expected: result.expected, actual: result.actual }}
-                                  />
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    ) : (
-                      <Empty icon={<FileCheck2 />} heading="No regression results yet">
-                        An operator can start the repeatable check suite. Results come from the
-                        backend, not illustrative scores.
-                      </Empty>
-                    )}
-                    {!!evaluation?.limitations?.length && (
-                      <div className="evaluation-limitations">
-                        <h3>Scope and limitations</h3>
-                        <ul>
-                          {evaluation.limitations.map((item, index) => (
-                            <li key={index}>{item}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </section>
-                )}
+                <div hidden={page !== 'evaluations'}>
+                  <EvaluationPanel
+                    role={role}
+                    busy={busy}
+                    refreshKey={evaluationRefresh}
+                    onAction={mutate}
+                    onNotice={setNotice}
+                  />
+                </div>
 
                 {page === 'knowledge' && (
                   <div className="knowledge-layout">

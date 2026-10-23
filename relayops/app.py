@@ -6,7 +6,7 @@ from pathlib import Path
 import os
 import threading
 
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Query
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
@@ -18,14 +18,16 @@ from .models import CreateCase, InvestigationRequest, DecisionRequest, ExecuteRe
 from .provider import configured, OpenAIProvider, ProviderError, function
 from .security import LocalBoundaryMiddleware, role
 from .knowledge import ARTICLES
+from .evaluation_history import EvaluationHistory
 
 ROOT = Path(__file__).resolve().parent.parent
 
 
 def create_app(db_path: str | Path = "runtime/relayops.sqlite") -> FastAPI:
     if os.getenv("RELAYOPS_ENV", "local") != "local":
-        raise RuntimeError("RelayOps v0.1 refuses a production environment with local demo personas.")
+        raise RuntimeError("RelayOps refuses a production environment with local demo personas.")
     domain = Domain(Store(db_path))
+    history = EvaluationHistory(domain.store)
     pool = ThreadPoolExecutor(max_workers=2, thread_name_prefix="relayops")
     slots = threading.BoundedSemaphore(6)
     eval_lock = threading.Lock()
@@ -40,8 +42,6 @@ def create_app(db_path: str | Path = "runtime/relayops.sqlite") -> FastAPI:
     app = FastAPI(title="RelayOps", version=__version__, lifespan=lifespan)
     app.add_middleware(LocalBoundaryMiddleware)
     app.state.domain = domain
-    app.state.evaluation = {"kind": "deterministic-regression", "model_evaluation": False, "generated_at": None,
-                            "total": 0, "passed": 0, "results": [], "limitations": ["No evaluation has run in this server session."]}
 
     @app.exception_handler(DomainError)
     async def domain_error(request, exc):
@@ -162,7 +162,12 @@ def create_app(db_path: str | Path = "runtime/relayops.sqlite") -> FastAPI:
     @app.get("/api/evaluations")
     def evaluation(request: Request):
         role(request)
-        return app.state.evaluation
+        return history.latest()
+
+    @app.get("/api/evaluations/history")
+    def evaluation_history(request: Request, limit: int = Query(default=20, ge=1, le=100)):
+        role(request)
+        return history.list(limit)
 
     @app.post("/api/evaluations/run")
     def run_evaluation(body: EmptyRequest, request: Request):
@@ -172,10 +177,21 @@ def create_app(db_path: str | Path = "runtime/relayops.sqlite") -> FastAPI:
         try:
             from .evaluation import evaluate
             result = evaluate()
-            app.state.evaluation = result
-            return result
+            return history.save(result)
         finally:
             eval_lock.release()
+
+    @app.get("/api/evaluations/{report_id}/report")
+    def evaluation_download(report_id: str, request: Request):
+        role(request)
+        result = history.get(report_id)
+        return JSONResponse(result, headers={
+            "Content-Disposition": f'attachment; filename="relayops-evaluation-{result["id"]}.json"'})
+
+    @app.get("/api/evaluations/{report_id}")
+    def evaluation_detail(report_id: str, request: Request):
+        role(request)
+        return history.get(report_id)
 
     @app.get("/api/knowledge")
     def knowledge(request: Request):

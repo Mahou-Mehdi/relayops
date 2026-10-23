@@ -1,6 +1,6 @@
 # Restricted transform repair
 
-RelayOps v0.1 implements a small, real part of the planned coding workflow: inspect a decimal mapping expression, propose a change, verify it against independent expectations, and produce a downloadable unified patch. It is a partial foundation for the enterprise incident plus coding workflow, not a general repository-fixing agent.
+RelayOps v0.2 implements a small, real part of the planned coding workflow: inspect a decimal mapping expression, propose a change, verify it against independent expectations, and produce a downloadable unified patch. It is a partial foundation for the enterprise incident plus coding workflow, not a general repository-fixing agent.
 
 ## What actually runs
 

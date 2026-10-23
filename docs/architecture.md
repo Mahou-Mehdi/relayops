@@ -1,6 +1,6 @@
 # Architecture
 
-RelayOps v0.1 is a local, single-process application. Its design separates investigation, authorization, execution, and verification so that a model-generated recommendation never grants itself permission to change a target.
+RelayOps v0.2 is a local, single-process application. Its design separates investigation, authorization, execution, and verification so that a model-generated recommendation never grants itself permission to change a target.
 
 ## Components
 
@@ -13,9 +13,12 @@ RelayOps v0.1 is a local, single-process application. Its design separates inves
 | `relayops/domain.py` | Authoritative state transitions, proposals, approvals, operations, receipt readback, repair re-verification |
 | `relayops/store.py` | SQLite transactions, uniqueness constraints, and persistent records |
 | `relayops/repair.py` | Restricted expression parser/interpreter, independent checks, diff and digest |
-| `relayops/evaluation.py` | Eight deterministic scenarios in an isolated temporary database |
+| `relayops/evaluation.py` | Eight deterministic scenarios graded on workflow and business outcomes; failures isolated per scenario |
+| `relayops/evaluation_history.py` | Append-only reports and ordered history in the local workspace database |
 
 Python dependencies are bounded in `pyproject.toml` and resolved in `requirements.lock`; web dependencies are resolved by `web/package-lock.json`. The supported setup is an editable repository checkout so fixture and dashboard paths remain available.
+
+Evaluation reports are committed after the suite completes, including completed suites containing failures. An additive SQLite schema upgrade creates the `evaluations` table without modifying existing incidents. Latest results are read from persisted history; restarting the server no longer clears them. Simulated evaluation effects still occur only in temporary databases. The API exposes no report update/delete operation. See [evaluations.md](evaluations.md).
 
 ## Investigation lifecycle
 
@@ -78,7 +81,7 @@ SQLite stores cases, runs, proposals, operations, events, and target receipts. F
 
 The fictional ERP has a separate ledger table but shares the same database and transaction boundary. Its effect, application state, operation, and audit event can therefore commit atomically. This is a useful local consistency demonstration; it does not implement a distributed transaction, durable outbound network queue, or remote crash-after-effect recovery.
 
-At startup, active persisted investigations become `interrupted`. Their evidence and prior events remain available, as do approvals and completed operations. A new run can inspect that case again. The current LangGraph graph has no persistent checkpointer; the exact model/tool continuation is not restored. Dashboard evaluation results are held in memory for the server session, separately from the durable case ledger.
+At startup, active persisted investigations become `interrupted`. Their evidence and prior events remain available, as do approvals and completed operations. A new run can inspect that case again. The current LangGraph graph has no persistent checkpointer; the exact model/tool continuation is not restored. Completed dashboard evaluation reports survive restarts in a separate table in the workspace database; an evaluation interrupted before its report is saved is not recovered.
 
 Audit events are application records with a sequence, not an append-only external audit service. Evidence SHA-256 values and proposal hashes detect mismatches in the supported workflow; they are not cryptographic signatures or protection from a machine owner editing the database.
 
@@ -88,7 +91,7 @@ The mapping-defect scenario passes a bounded source context to a deterministic c
 
 The domain calls the verifier again instead of trusting submitted scores. Only a changed candidate passing every check when the baseline failed can create a patch-export proposal. Execution marks the artifact `patch_ready`; it does not alter the original expression file, queued business payload, or external software. The approved artifact is available through the patch endpoint and case JSON report.
 
-See [coding-boundary.md](coding-boundary.md) for the grammar, resource bounds, test independence, and explicit limits on the word “protected.” An arbitrary-code execution environment is not part of v0.1.
+See [coding-boundary.md](coding-boundary.md) for the grammar, resource bounds, test independence, and explicit limits on the word “protected.” An arbitrary-code execution environment is not part of v0.2.
 
 ## Local HTTP and live-provider boundaries
 

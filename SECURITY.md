@@ -1,6 +1,6 @@
 # Security and trust boundaries
 
-RelayOps v0.1 is a **local development demonstration**. It uses fictional incidents and an in-process fictional ERP. It is not designed for internet exposure, production credentials, real business execution, or hostile users sharing the local machine.
+RelayOps v0.2 is a **local development demonstration**. It uses fictional incidents and an in-process fictional ERP. It is not designed for internet exposure, production credentials, real business execution, or hostile users sharing the local machine.
 
 ## Local personas are not authentication
 
@@ -19,6 +19,8 @@ Logs, runbooks, source text, and tool responses are untrusted evidence. The syst
 Repeated local operations are constrained by unique operation/receipt identities and SQLite transactions. The fictional target shares the application's database. This release does not promise exactly-once effects or crash-after-effect recovery against a remote API. Starting the server again marks unfinished investigations interrupted; it does not restore an arbitrary model continuation.
 
 Case/event records and SHA-256 values provide workflow evidence, not tamper-proof storage. An attacker with filesystem/database access is outside this release's trust boundary.
+
+Evaluation history is append-only through the application API, but it shares this same filesystem trust boundary. Reports may include fictional receipt identifiers, expected values, and observed outcomes. Failed scenarios persist sanitized stage/error-type descriptions, not arbitrary exception messages. Reports are regression evidence, not authenticated attestations.
 
 ## Coding boundary
 

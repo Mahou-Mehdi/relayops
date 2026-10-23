@@ -10,13 +10,13 @@ The first release focuses on a difficult operational distinction: a failed reque
 
 This is an original engineering portfolio project by **Mahou Mehdi**. Its incidents, suppliers, orders, and ERP target are fictional. It is not an employer implementation or a connected SAP system.
 
-<table><tr><td width="50%"><img src="docs/screenshots/repair.jpg" alt="Recorded mapping incident with original baseline and independently verified repair" /></td><td width="50%"><img src="docs/screenshots/evaluations.jpg" alt="Eight deterministic regression scenarios passing in the RelayOps dashboard" /></td></tr></table>
+<table><tr><td width="50%"><img src="docs/screenshots/repair.jpg" alt="Recorded mapping incident with original baseline and independently verified repair" /></td><td width="50%"><img src="docs/screenshots/evaluations.jpg" alt="Saved evaluation report with eight passing scenarios and 170 passing outcome checks" /></td></tr></table>
 
-## Try the first release
+## Try RelayOps
 
 No model key is required. Start in **Fixture · deterministic** mode, create an incident in **Scenario lab**, then inspect its investigation, approval, operation, and report.
 
-| Capability | Implemented in v0.1 |
+| Capability | Implemented in v0.2 |
 | --- | --- |
 | Investigation | LangGraph investigator/tool/record loop with scoped evidence, receipt lookup, runbook search, and source inspection |
 | Providers | Deterministic fixture policy, or an explicitly selected OpenAI Responses model |
@@ -24,10 +24,16 @@ No model key is required. Start in **Fixture · deterministic** mode, create an 
 | Durable records | SQLite cases, runs, evidence, proposals, operations, events, and fictional target receipts |
 | Recovery | Approved retry or receipt reconciliation; duplicate execution returns the recorded outcome |
 | Coding | Restricted expression parser, independent decimal tests, actual unified diff, SHA-256, and approved patch export |
-| Evaluation | Eight reproducible deterministic scenario regressions, isolated from saved cases |
+| Evaluation | Eight scenarios graded on actual outcomes, with saved history, individual checks, and downloadable reports |
 | Visibility | Evidence citations, observable tool activity, provider-reported token counts, case JSON and patch downloads |
 
 Fixture mode uses explicit observed error codes and a known repair candidate. It makes no model calls. Live mode changes who selects tools and proposes the diagnosis or expression; the same application controls still validate the result. A completed investigation is separate from an approved or executed business operation.
+
+### New in v0.2: evaluation evidence that survives a restart
+
+The evaluator now checks what actually happened: completed investigations, current approvals, unchanged immutable requests, matching receipts, duplicate prevention, and independently verified patch exports. A correct diagnosis alone cannot pass a broken recovery. Exceptions become failed scenario results so the rest of the suite can still run.
+
+Every dashboard evaluation is saved locally. Select a previous run, inspect its individual checks and failure details, or download that exact report as JSON. See the [release notes](CHANGELOG.md) and [evaluation guide](docs/evaluations.md).
 
 ## Run locally
 
@@ -110,19 +116,19 @@ From the repository root, using the virtual environment:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest
-.\.venv\Scripts\python.exe -m relayops --evaluate
+.\.venv\Scripts\python.exe -m relayops --evaluate --report runtime/evaluation-report.json
 cd web
 npm test
 npm run build
 ```
 
-On Unix, replace the Python executable with `.venv/bin/python`. The dashboard's **Evaluations → Run regression** performs the same eight scenario checks against a temporary database. It does not modify your case history. Dashboard evaluation results belong to the current server session; download or capture CLI output if you want to retain them.
+On Unix, replace the Python executable with `.venv/bin/python`. The dashboard's **Evaluations → Run regression** runs the eight scenarios against a temporary database without modifying your cases. Its reports are saved in the workspace database and survive server restarts. The CLI prints a report and optionally saves it with `--report`; CLI reports do not appear in dashboard history.
 
-**These eight checks are system regressions, not an agent benchmark.** They verify the deterministic policy's expected action/cause and, for recovery scenarios, receipt readback and duplicate execution. They do not estimate live-model accuracy, resistance to all prompt injections, or generalization to unseen incidents.
+**These eight scenarios are system regressions, not an agent benchmark.** Each contains multiple checks of diagnosis, workflow, and business outcomes. Those checks are not independent incidents or a statistical sample. They do not estimate live-model accuracy, resistance to all prompt injections, or generalization to unseen incidents.
 
-CI runs the backend on Python 3.11 and 3.12, plus dashboard tests and its production build on Node 22. The provider contract is tested with mocked HTTP responses and a scripted model; no live paid-model evaluation is claimed for this release.
+CI runs the backend on Python 3.11 and 3.12, plus dashboard tests and its production build on Node 22. It retains each generated evaluation report as a downloadable artifact for 30 days, including reports with failed checks. The provider contract is tested with mocked HTTP responses and a scripted model; no live paid-model evaluation is claimed for this release.
 
-Local release verification: **90 backend tests and 8 frontend tests passed**, along with the dashboard build and all eight scenario regressions. Browser checks covered case creation, investigation, separate approval/execution, receipt verification, the repair diff and verifier results, and the evaluation screen.
+The test suite covers business rules, mocked model transport, workflow control, independent repair checks, report persistence, and deliberate faults that must make the evaluator fail. The CI badge links to results for the published revision.
 
 The repair fixture currently passes **8/16** protected checks before correction and **16/16** with the deterministic correction. Component tests also compare 300 seeded inputs against a separate integer-arithmetic oracle. Those are checks of this bounded transform, not a general coding-agent success rate. See [the coding boundary](docs/coding-boundary.md).
 

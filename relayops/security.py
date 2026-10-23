@@ -28,7 +28,7 @@ class LocalBoundaryMiddleware:
 
         host = request.url.hostname
         if host not in {"127.0.0.1", "localhost", "[::1]", "::1"}:
-            return await reject("RelayOps v0.1 only serves localhost.", 403)
+            return await reject("RelayOps only serves localhost.", 403)
         if request.method not in {"GET", "HEAD", "OPTIONS"}:
             if request.headers.get("X-RelayOps-Request") != "1":
                 return await reject("Missing local request header.", 403)

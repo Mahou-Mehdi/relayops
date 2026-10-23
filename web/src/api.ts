@@ -53,3 +53,15 @@ export async function downloadPatch(id: string, role: Role) {
   anchor.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+export async function downloadEvaluationReport(id: string, role: Role) {
+  const response = await fetch(`/api/evaluations/${encodeURIComponent(id)}/report`, {
+    headers: { 'X-RelayOps-Role': role },
+  });
+  if (!response.ok) throw new Error(`Evaluation report download failed (${response.status})`);
+  const url = URL.createObjectURL(await response.blob()),
+    anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = `relayops-evaluation-${id}.json`;
+  anchor.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
