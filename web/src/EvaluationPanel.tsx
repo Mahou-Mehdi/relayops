@@ -4,7 +4,6 @@ import {
   ArrowDownToLine,
   Check,
   ChevronRight,
-  FileCheck2,
   History,
   LoaderCircle,
   Play,
@@ -47,7 +46,6 @@ export function EvaluationResults({ report }: { report: Evaluation }) {
             {report.passed}
             <small> / {report.total}</small>
           </strong>
-          <p>Every required check must pass for a scenario to pass.</p>
         </div>
         <div>
           <span>Individual checks passed</span>
@@ -55,10 +53,9 @@ export function EvaluationResults({ report }: { report: Evaluation }) {
             {report.checks_passed}
             <small> / {report.checks_total}</small>
           </strong>
-          <p>Behavior, authorization, recovery, and repair assertions.</p>
         </div>
         <div>
-          <span>Recorded duration</span>
+          <span>Duration</span>
           <strong>
             {Math.round(report.duration_ms)}
             <small> ms</small>
@@ -138,8 +135,7 @@ export function EvaluationResults({ report }: { report: Evaluation }) {
               </div>
             ) : (
               <p className="evaluation-no-checks">
-                No individual checks were recorded. Inspect the error and download the complete
-                report.
+                No individual checks were recorded. Download the report for details.
               </p>
             )}
           </details>
@@ -147,7 +143,7 @@ export function EvaluationResults({ report }: { report: Evaluation }) {
       </div>
       {!!report.limitations.length && (
         <div className="evaluation-limitations">
-          <h3>Scope and limitations</h3>
+          <h3>Report scope</h3>
           <ul>
             {report.limitations.map((item, index) => (
               <li key={index}>{item}</li>
@@ -213,13 +209,12 @@ export default function EvaluationPanel({ role, busy, refreshKey, onAction, onNo
   return (
     <section className="evaluation-panel panel" aria-label="Regression evaluations">
       <div className="evaluation-hero">
-        <div className="eval-symbol">
-          <FileCheck2 size={28} />
-        </div>
         <div>
-          <p className="eyebrow">DETERMINISTIC REGRESSION</p>
-          <h2>Results you can come back to.</h2>
-          <p>Saved reports survive restarts. Each run uses isolated temporary cases.</p>
+          <h2>Regression runs</h2>
+          <p>
+            Run recovery and repair checks in a deterministic simulation. This suite does not
+            measure model quality.
+          </p>
         </div>
         <button
           className="button"
@@ -239,13 +234,6 @@ export default function EvaluationPanel({ role, busy, refreshKey, onAction, onNo
           {busy === 'evaluate' ? <LoaderCircle className="spin" size={16} /> : <Play size={14} />}
           {busy === 'evaluate' ? 'Running regression…' : 'Run regression'}
         </button>
-      </div>
-      <div className="evaluation-disclaimer">
-        <AlertCircle size={16} />
-        <p>
-          These checks verify deterministic system behavior in fictional integrations. They do not
-          measure an AI model's accuracy or performance on unseen incidents.
-        </p>
       </div>
       {state.history.length > 0 && (
         <div className="evaluation-history">
@@ -315,21 +303,14 @@ export default function EvaluationPanel({ role, busy, refreshKey, onAction, onNo
       ) : (
         !problem && (
           <div className="empty-state">
-            <div className="empty-icon">
-              <FileCheck2 />
-            </div>
-            <h3>No saved regression runs yet</h3>
-            <p>
-              An operator can run the suite to create the first report. The scenarios stay separate
-              from your operation history.
-            </p>
+            <h3>No saved runs</h3>
+            <p>Run the suite as Operator to save a report.</p>
           </div>
         )
       )}
       {!canOperate(role) && (
         <p className="evaluation-role-note">
-          This role can read and download saved reports. Switch to Operator to run the regression
-          suite.
+          This role can read and download reports. Switch to Operator to run the suite.
         </p>
       )}
     </section>

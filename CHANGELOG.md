@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.1 — 2026-10-25
+
+The dashboard now puts the incident queue and evidence ahead of introductory copy.
+
+- Use a compact navigation rail, page headers, and status summary.
+- Present scenarios as a list with expected behavior and a direct create action.
+- Simplify evaluation headers and report totals while retaining history and individual checks.
+- Use consistent slate surfaces, system typography, and restrained status colors.
+- Rewrite interface labels and the README around concrete operations and setup steps.
+
 ## 0.2.0 — 2026-10-23
 
 Evaluation reports now test controlled outcomes and survive server restarts.

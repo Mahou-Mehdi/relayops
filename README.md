@@ -2,38 +2,23 @@
 
 [![CI](https://github.com/Mahou-Mehdi/relayops/actions/workflows/ci.yml/badge.svg)](https://github.com/Mahou-Mehdi/relayops/actions/workflows/ci.yml)
 
-**Investigate an integration failure. Review the evidence. Authorize an exact recovery. Verify the outcome.**
+RelayOps is a local workbench for investigating failed ERP exports and reviewing recovery actions. It uses FastAPI, React, LangGraph, and SQLite. The included integrations use fictional orders and suppliers; no SAP account or model key is needed to try them.
 
-RelayOps is a local agent control center for enterprise incident investigation and supervised code repair. It combines a React dashboard, a real LangGraph tool loop, a SQLite operation ledger, and a restricted decimal-mapping repair workflow.
+An example: an order reaches the target, but its acknowledgement is lost. The case needs receipt reconciliation rather than a new export. RelayOps checks the target receipt, proposes reconciliation, and waits for a reviewer to approve the exact action. An operator executes it, then the application reads back the result.
 
-The first release focuses on a difficult operational distinction: a failed request may need a retry, an already accepted request needs reconciliation, and an authorization or business rejection needs escalation. An agent's recommendation never authorizes its own execution.
+![Incident queue and recovery review](docs/screenshots/operations.jpg)
 
-This is an original engineering portfolio project by **Mahou Mehdi**. Its incidents, suppliers, orders, and ERP target are fictional. It is not an employer implementation or a connected SAP system.
+## What's implemented
 
-<table><tr><td width="50%"><img src="docs/screenshots/repair.jpg" alt="Recorded mapping incident with original baseline and independently verified repair" /></td><td width="50%"><img src="docs/screenshots/evaluations.jpg" alt="Saved evaluation report with eight passing scenarios and 170 passing outcome checks" /></td></tr></table>
+- **Investigation:** scoped evidence reads, receipt lookup, runbook search, and a diagnosis with source citations.
+- **Review and execution:** approvals bind the action hash, target revisions, and expiry. A recommendation cannot authorize itself.
+- **Recovery:** retry an unchanged export or reconcile an existing receipt. Repeated execution returns the recorded result.
+- **Mapping repair:** inspect a failing decimal expression, verify a candidate against independent expected values, and export the reviewed diff.
+- **Evaluation:** run eight deterministic scenarios, inspect outcome checks, select saved reports, and download their JSON.
 
-## Try RelayOps
+Cases, evidence, approvals, operations, and evaluation reports are stored locally. The default fixture policy follows explicit error codes and makes no model calls. An optional live provider selects tools and proposes diagnoses or repair expressions through the same application controls.
 
-No model key is required. Start in **Fixture · deterministic** mode, create an incident in **Scenario lab**, then inspect its investigation, approval, operation, and report.
-
-| Capability | Implemented in v0.2 |
-| --- | --- |
-| Investigation | LangGraph investigator/tool/record loop with scoped evidence, receipt lookup, runbook search, and source inspection |
-| Providers | Deterministic fixture policy, or an explicitly selected OpenAI Responses model |
-| Human control | Separate operator/reviewer actions; exact proposal hash, target revisions, expiry, and state checks |
-| Durable records | SQLite cases, runs, evidence, proposals, operations, events, and fictional target receipts |
-| Recovery | Approved retry or receipt reconciliation; duplicate execution returns the recorded outcome |
-| Coding | Restricted expression parser, independent decimal tests, actual unified diff, SHA-256, and approved patch export |
-| Evaluation | Eight scenarios graded on actual outcomes, with saved history, individual checks, and downloadable reports |
-| Visibility | Evidence citations, observable tool activity, provider-reported token counts, case JSON and patch downloads |
-
-Fixture mode uses explicit observed error codes and a known repair candidate. It makes no model calls. Live mode changes who selects tools and proposes the diagnosis or expression; the same application controls still validate the result. A completed investigation is separate from an approved or executed business operation.
-
-### New in v0.2: evaluation evidence that survives a restart
-
-The evaluator now checks what actually happened: completed investigations, current approvals, unchanged immutable requests, matching receipts, duplicate prevention, and independently verified patch exports. A correct diagnosis alone cannot pass a broken recovery. Exceptions become failed scenario results so the rest of the suite can still run.
-
-Every dashboard evaluation is saved locally. Select a previous run, inspect its individual checks and failure details, or download that exact report as JSON. See the [release notes](CHANGELOG.md) and [evaluation guide](docs/evaluations.md).
+Changes by version are in the [changelog](CHANGELOG.md).
 
 ## Run locally
 
@@ -102,7 +87,7 @@ These are placeholders; choose your own credentials and model. The application *
 
 Live mode sends the selected fictional case evidence, relevant runbooks, and coding context to `api.openai.com`. API charges apply. Investigations allow at most 10 model calls and 20 tool calls, with a 180-second budget checked between steps. A model request has bounded network timeouts and may still be settling when cancellation is requested. Each response is limited to 1,800 output tokens. These are execution bounds, not a monetary budget; token usage is reported when provided, and the application does not invent a dollar estimate. Live repair uses a separate proposal request and is not included in the investigation run's usage totals.
 
-## Three useful demonstrations
+## Start with these cases
 
 1. **Accepted order, missing acknowledgement:** look up the existing receipt, approve reconciliation as Reviewer, then execute as Operator. The target still has one receipt.
 2. **Decimal amount mapping defect:** diagnose premature rounding, prepare a restricted repair, inspect baseline versus candidate checks and the diff, then review and export the patch. Export does not deploy code or resolve the failed business export.
@@ -124,19 +109,17 @@ npm run build
 
 On Unix, replace the Python executable with `.venv/bin/python`. The dashboard's **Evaluations → Run regression** runs the eight scenarios against a temporary database without modifying your cases. Its reports are saved in the workspace database and survive server restarts. The CLI prints a report and optionally saves it with `--report`; CLI reports do not appear in dashboard history.
 
-**These eight scenarios are system regressions, not an agent benchmark.** Each contains multiple checks of diagnosis, workflow, and business outcomes. Those checks are not independent incidents or a statistical sample. They do not estimate live-model accuracy, resistance to all prompt injections, or generalization to unseen incidents.
+Automated tests cover diagnosis, approvals, receipts, replay, repair exports, and report persistence. Fault-injection tests deliberately break recovery paths and require the evaluator to report a failure. The eight fixture scenarios are deterministic system regressions; their check counts do not measure live-model accuracy or performance on unseen incidents. See [evaluation details](docs/evaluations.md).
 
-CI runs the backend on Python 3.11 and 3.12, plus dashboard tests and its production build on Node 22. It retains each generated evaluation report as a downloadable artifact for 30 days, including reports with failed checks. The provider contract is tested with mocked HTTP responses and a scripted model; no live paid-model evaluation is claimed for this release.
+CI runs on Python 3.11 and 3.12 with Node 22 for dashboard tests and the production build. JSON evaluation reports are retained as Actions artifacts for 30 days. Model transport tests use mocked responses and a scripted provider.
 
-The test suite covers business rules, mocked model transport, workflow control, independent repair checks, report persistence, and deliberate faults that must make the evaluator fail. The CI badge links to results for the published revision.
-
-The repair fixture currently passes **8/16** protected checks before correction and **16/16** with the deterministic correction. Component tests also compare 300 seeded inputs against a separate integer-arithmetic oracle. Those are checks of this bounded transform, not a general coding-agent success rate. See [the coding boundary](docs/coding-boundary.md).
+The decimal repair fixture passes **8/16** protected checks before correction and **16/16** afterward. Component tests also compare 300 seeded inputs against an independent integer-arithmetic oracle. The [coding boundary](docs/coding-boundary.md) describes the expression grammar and its limits.
 
 ## Architecture and scope
 
 ```mermaid
 flowchart LR
-  UI[React control center] --> API[FastAPI local API]
+  UI[React workbench] --> API[FastAPI local API]
   API --> Graph[LangGraph investigation]
   Graph --> Provider[Fixture policy or live model]
   Graph --> Tools[Read-only scoped tools]
@@ -169,4 +152,4 @@ docs/          Architecture, demonstrations, coding boundary, roadmap
 runtime/       Local working data; not application source
 ```
 
-MIT licensed. Copyright 2026 Mahou Mehdi. See [LICENSE](LICENSE).
+Maintained by [Mahou Mehdi](https://github.com/Mahou-Mehdi). [MIT license](LICENSE).

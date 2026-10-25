@@ -6,7 +6,7 @@ The case queue starts empty. **Scenario lab** creates original fictional inciden
 
 ## 1. Investigate and recover an accepted request
 
-1. As **Operator**, open **Scenario lab** and create **Accepted order, missing acknowledgement**.
+1. As **Operator**, open **Scenario lab** and choose **Create case** beside **Accepted order, missing acknowledgement**.
 2. Choose **Investigate**. The Activity view records scoped evidence reads, receipt lookup, runbook search, and diagnosis submission.
 3. Open **Overview**. The recommendation should recover the already recorded target receipt rather than retrying the export. Follow its citations into **Evidence** and inspect the receipt observation.
 4. Switch to **Reviewer**. Expand **Exact proposed action** and inspect the order/job scope, hash, revisions, and expiry. Choose **Approve** and confirm. This records authorization only.

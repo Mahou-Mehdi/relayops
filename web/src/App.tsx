@@ -51,6 +51,12 @@ import type {
 
 type Page = 'cases' | 'lab' | 'evaluations' | 'knowledge';
 type DetailTab = 'overview' | 'evidence' | 'activity' | 'repair';
+const pageTitles: Record<Page, string> = {
+  cases: 'Operations',
+  lab: 'Scenario lab',
+  evaluations: 'Evaluations',
+  knowledge: 'Runbooks',
+};
 const short = (value: string) => value?.slice(0, 8) || '—';
 const date = (value: string) =>
   value
@@ -370,67 +376,44 @@ export default function App() {
           aria-label="RelayOps home"
         >
           <span className="brand-mark">
-            <Layers3 size={22} />
+            <Layers3 size={20} />
           </span>
-          <span>
-            relayops<span className="brand-dot">.</span>
-            <small>AGENT CONTROL CENTER</small>
-          </span>
+          <span>RelayOps</span>
         </a>
-        <div className="workspace-tag">
-          <span className="tiny-dot" /> Local workspace <Badge>v{config?.version || '0.1'}</Badge>
-        </div>
-        <p className="nav-label">WORKSPACE</p>
+
         <nav aria-label="Main navigation">
           {(
             [
               { id: 'cases', label: 'Operations', icon: Activity },
               { id: 'lab', label: 'Scenario lab', icon: FlaskConical },
               { id: 'evaluations', label: 'Evaluations', icon: FileCheck2 },
-              { id: 'knowledge', label: 'Knowledge', icon: BookOpen },
+              { id: 'knowledge', label: 'Runbooks', icon: BookOpen },
             ] as const
           ).map((item) => (
             <button
               key={item.id}
               className={`nav-item ${page === item.id ? 'active' : ''}`}
               aria-current={page === item.id ? 'page' : undefined}
+              aria-label={item.label}
+              title={item.label}
               onClick={() => setPage(item.id)}
             >
               <item.icon size={18} />
-              {item.label}
-              {item.id === 'cases' && <span>{cases.length}</span>}
+              <span className="nav-text">{item.label}</span>
+              {item.id === 'cases' && <span className="nav-count">{cases.length}</span>}
             </button>
           ))}
         </nav>
-        <div className="sidebar-note">
-          <ShieldCheck size={20} />
-          <strong>Evidence before action.</strong>
-          <p>
-            Scoped investigations.
-            <br />
-            Explicit review.
-            <br />
-            Verified outcomes.
-          </p>
-          <span>LOCAL DEMONSTRATION</span>
-        </div>
         <div className="sidebar-footer">
-          <div className="avatar">MM</div>
-          <div>
-            <strong>Mahou Mehdi</strong>
-            <small>Portfolio workspace</small>
-          </div>
-          <ChevronRight size={15} />
+          <span className="mono">v{config?.version || '0.2'}</span>
+          <span>Local demo</span>
         </div>
       </aside>
 
       <div className="main-shell">
         <header className="topbar">
           <div className="breadcrumb">
-            Workspace <ChevronRight size={12} />
-            <strong>
-              {page === 'cases' ? 'Operations' : page === 'lab' ? 'Scenario lab' : label(page)}
-            </strong>
+            <span className="tiny-dot" /> Local console
           </div>
           <div className="topbar-controls">
             <Badge tone={mode === 'fixture' ? 'amber' : 'blue'}>
@@ -458,32 +441,15 @@ export default function App() {
         <main>
           <section className="page-heading">
             <div>
-              <p className="eyebrow">
-                {page === 'cases'
-                  ? 'OBSERVE / INVESTIGATE / VERIFY'
-                  : page === 'lab'
-                    ? 'CONTROLLED FAILURES. REAL WORKFLOWS.'
-                    : page === 'evaluations'
-                      ? 'REPRODUCIBLE QUALITY CHECKS'
-                      : 'OPERATING NOTES'}
-              </p>
-              <h1>
-                {page === 'cases'
-                  ? 'Operations, with a clear trail.'
-                  : page === 'lab'
-                    ? 'A safe place to break things.'
-                    : page === 'evaluations'
-                      ? 'Measure what actually works.'
-                      : 'Know the boundaries.'}
-              </h1>
+              <h1>{pageTitles[page]}</h1>
               <p className="page-lead">
                 {page === 'cases'
-                  ? 'Investigate integration failures, review proposed actions, and verify every outcome.'
+                  ? 'Integration cases, evidence, and recovery approvals.'
                   : page === 'lab'
-                    ? 'Create an isolated incident from a fictional integration. Every scenario has an explicit expected behavior.'
+                    ? 'Create an isolated case from a predefined integration scenario.'
                     : page === 'evaluations'
-                      ? 'Deterministic regression checks for supported scenarios. These are not model-quality scores.'
-                      : 'The system contract, evidence rules, and limits of this local release.'}
+                      ? 'Saved regression runs and check results.'
+                      : 'Investigation rules, recovery procedures, and runtime limits.'}
               </p>
             </div>
             <div className="heading-actions">
@@ -503,7 +469,7 @@ export default function App() {
               {page === 'cases' && (
                 <button className="button" onClick={() => setPage('lab')}>
                   <Plus size={16} />
-                  New scenario
+                  Create case
                 </button>
               )}
             </div>
@@ -513,7 +479,7 @@ export default function App() {
             <div className="banner error" role="alert">
               <AlertCircle size={18} />
               <div>
-                <strong>Action needs attention</strong>
+                <strong>Request failed</strong>
                 <p>{error}</p>
               </div>
               <button aria-label="Dismiss error" onClick={() => setError('')}>
@@ -538,39 +504,33 @@ export default function App() {
           {initialLoading && !config ? (
             <div className="loading-state">
               <LoaderCircle className="spin" />
-              <p>Connecting to the local operation ledger…</p>
+              <p>Loading workspace…</p>
             </div>
           ) : (
             config && (
               <>
                 {page === 'cases' && (
                   <>
-                    <div className="metrics">
-                      <Metric
-                        icon={<Layers3 />}
-                        value={cases.length}
-                        label="Recorded cases"
-                        note="Persisted in the operation ledger"
-                      />
-                      <Metric
-                        icon={<Activity />}
-                        value={activeCount}
-                        label="Active investigations"
-                        note="Queued or currently running"
-                      />
-                      <Metric
-                        icon={<CheckCircle2 />}
-                        value={cases.filter((item) => item.status === 'resolved').length}
-                        label="Resolved cases"
-                        note="Recorded case outcomes"
-                      />
-                      <Metric
-                        icon={<FlaskConical />}
-                        value={scenarios.length}
-                        label="Available scenarios"
-                        note="Fictional, isolated target systems"
-                      />
-                    </div>
+                    <dl className="status-strip" aria-label="Case status summary">
+                      <div>
+                        <dt>Unresolved</dt>
+                        <dd>{cases.filter((item) => item.status !== 'resolved').length}</dd>
+                      </div>
+                      <div>
+                        <dt>Awaiting review</dt>
+                        <dd>
+                          {cases.filter((item) => item.status === 'awaiting_approval').length}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Active</dt>
+                        <dd>{activeCount}</dd>
+                      </div>
+                      <div>
+                        <dt>Resolved</dt>
+                        <dd>{cases.filter((item) => item.status === 'resolved').length}</dd>
+                      </div>
+                    </dl>
                     <div className="workspace-grid">
                       <section className="case-list panel">
                         <div className="panel-heading">
@@ -624,19 +584,17 @@ export default function App() {
                           {!filtered.length && (
                             <Empty
                               icon={<Layers3 />}
-                              heading={
-                                cases.length ? 'No matching cases' : 'Your queue starts here'
-                              }
+                              heading={cases.length ? 'No matching cases' : 'No cases yet'}
                             >
                               {cases.length
                                 ? 'Try another search or status filter.'
-                                : 'Create a scenario to investigate a real, recorded failure in the local simulator.'}
+                                : 'Choose Create case to load a simulated incident.'}
                             </Empty>
                           )}
                         </div>
                         <div className="list-footer">
                           <LockKeyhole size={12} />
-                          Local demo roles are not authentication.
+                          Demo roles are not sign-in accounts.
                         </div>
                       </section>
                       <section className="case-detail panel">
@@ -732,9 +690,7 @@ export default function App() {
                             <div className="detail-body" role="tabpanel">
                               {tab === 'overview' && (
                                 <>
-                                  <div className="section-label">
-                                    <span>01</span>Diagnosis & recommendation
-                                  </div>
+                                  <div className="section-label">Diagnosis</div>
                                   {detail.diagnosis ? (
                                     <>
                                       <div className="diagnosis-card">
@@ -761,7 +717,7 @@ export default function App() {
                                         </div>
                                         {detail.diagnosis.hypotheses.length > 0 && (
                                           <div className="hypotheses">
-                                            <strong>Hypotheses · not established facts</strong>
+                                            <strong>Unconfirmed hypotheses</strong>
                                             <ul>
                                               {detail.diagnosis.hypotheses.map(
                                                 (hypothesis, index) => (
@@ -784,17 +740,15 @@ export default function App() {
                                     <div className="inline-empty">
                                       <CircleDot size={20} />
                                       <div>
-                                        <strong>Ready for an investigation</strong>
+                                        <strong>No diagnosis yet</strong>
                                         <p>
-                                          Run the scoped workflow to inspect the recorded evidence
-                                          and produce a cited diagnosis.
+                                          Choose Investigate to inspect the evidence and record a
+                                          diagnosis.
                                         </p>
                                       </div>
                                     </div>
                                   )}
-                                  <div className="section-label">
-                                    <span>02</span>Proposals & decisions
-                                  </div>
+                                  <div className="section-label">Proposals and decisions</div>
                                   {detail.proposals.length ? (
                                     detail.proposals.map((proposal) => (
                                       <ProposalCard
@@ -808,15 +762,12 @@ export default function App() {
                                     ))
                                   ) : (
                                     <p className="muted empty-copy">
-                                      No proposal has been recorded. An investigation may recommend
-                                      an action, a restricted repair, escalation, or no change.
+                                      No recovery proposal recorded.
                                     </p>
                                   )}
                                   {!!detail.operations.length && (
                                     <>
-                                      <div className="section-label">
-                                        <span>03</span>Recorded operations
-                                      </div>
+                                      <div className="section-label">Recorded operations</div>
                                       {detail.operations.map((operation) => (
                                         <div className="operation-card" key={operation.id}>
                                           <div>
@@ -884,10 +835,7 @@ export default function App() {
                                 <>
                                   <div className="section-intro">
                                     <h3>Investigation activity</h3>
-                                    <p>
-                                      Observable tool actions and outcomes, not hidden model
-                                      reasoning.
-                                    </p>
+                                    <p>Tool calls, results, and run errors.</p>
                                   </div>
                                   {detail.runs.map((run) => (
                                     <div className="run-card" key={run.id}>
@@ -947,8 +895,8 @@ export default function App() {
                                   ))}
                                   {!detail.runs.length && (
                                     <Empty icon={<Activity />} heading="No investigation runs yet">
-                                      Choose Investigate to start the bounded workflow. Its actions
-                                      and results will appear here.
+                                      Choose Investigate to start a run. Tool results will appear
+                                      here.
                                     </Empty>
                                   )}
                                   <details className="case-events">
@@ -973,9 +921,8 @@ export default function App() {
                                   <div className="section-intro">
                                     <h3>Restricted transform repair</h3>
                                     <p>
-                                      A small, allowlisted mapping expression, checked by a trusted
-                                      interpreter. This is not general code execution or a
-                                      repository sandbox.
+                                      Verify a mapping expression against protected checks. Repairs
+                                      are limited to the supported expression language.
                                     </p>
                                   </div>
                                   {detail.repair ? (
@@ -985,13 +932,13 @@ export default function App() {
                                       icon={<Code2 />}
                                       heading={
                                         detail.scenario_id === 'mapping-defect'
-                                          ? 'Reproduce. Propose. Verify.'
+                                          ? 'No repair prepared'
                                           : 'No transform repair for this case'
                                       }
                                     >
                                       {detail.scenario_id === 'mapping-defect'
                                         ? 'Prepare a candidate expression and inspect the original failure, independent verification, and exact patch.'
-                                        : 'The mapping-defect scenario demonstrates the bounded coding workflow.'}
+                                        : 'Use the mapping-defect scenario to prepare and verify an expression repair.'}
                                     </Empty>
                                   )}
                                   {detail.proposals.some(
@@ -1040,8 +987,8 @@ export default function App() {
                           </>
                         ) : (
                           <Empty icon={<Layers3 />} heading="Select a case to begin">
-                            A case brings evidence, investigation runs, human decisions, and
-                            verified outcomes into one record.
+                            Select a case from the queue to inspect its evidence and proposed
+                            actions.
                           </Empty>
                         )}
                       </section>
@@ -1052,53 +999,49 @@ export default function App() {
                 {page === 'lab' && (
                   <>
                     <div className="lab-note">
-                      <FlaskConical size={20} />
-                      <div>
-                        <strong>Playable failure lab</strong>
-                        <p>
-                          Every scenario uses its own deterministic in-process target. No real
-                          company service or live SAP system is accessed.
-                        </p>
-                      </div>
-                      <Badge tone="amber">SIMULATED TARGET</Badge>
+                      <FlaskConical size={16} />
+                      <p>
+                        Fictional local targets. These scenarios do not access a live SAP or company
+                        system.
+                      </p>
                     </div>
-                    <div className="scenario-grid">
-                      {scenarios.map((scenario, index) => (
-                        <article className="scenario-card" key={scenario.id}>
-                          <div className="scenario-top">
-                            <span className="scenario-number">
-                              {String(index + 1).padStart(2, '0')}
+                    <section className="scenario-list panel" aria-label="Available scenarios">
+                      <div className="scenario-list-heading">
+                        <span>Scenario</span>
+                        <span>Expected result</span>
+                        <span className="sr-only">Action</span>
+                      </div>
+                      {scenarios.map((scenario) => (
+                        <article className="scenario-row" key={scenario.id}>
+                          <div className="scenario-primary">
+                            <h2>{scenario.title}</h2>
+                            <p>{scenario.description}</p>
+                            <span className="scenario-category">
+                              {label(scenario.category)} · {label(scenario.severity)} severity
                             </span>
-                            <Badge tone={scenario.severity === 'high' ? 'red' : 'neutral'}>
-                              {label(scenario.category)}
-                            </Badge>
                           </div>
-                          <h2>{scenario.title}</h2>
-                          <p>{scenario.description}</p>
                           <div className="expected">
-                            <span>EXPECTED BEHAVIOR</span>
+                            <span>Expected result</span>
                             <p>{scenario.expected_behavior}</p>
                           </div>
                           <button
-                            className="button secondary"
+                            className="button secondary small"
                             disabled={!canOperate(role) || !!busy}
                             onClick={() => createCase(scenario)}
+                            aria-label={`Create case: ${scenario.title}`}
                           >
                             {busy === `create:${scenario.id}` ? (
-                              <LoaderCircle className="spin" size={15} />
+                              <LoaderCircle className="spin" size={14} />
                             ) : (
-                              <Plus size={15} />
+                              <Plus size={14} />
                             )}
-                            Create scenario
-                            <ArrowRight size={15} />
+                            Create case
                           </button>
                         </article>
                       ))}
-                    </div>
+                    </section>
                     {role !== 'operator' && (
-                      <p className="muted">
-                        Switch the local demo role to Operator to create scenarios.
-                      </p>
+                      <p className="muted">Select Operator to create cases.</p>
                     )}
                   </>
                 )}
@@ -1117,23 +1060,24 @@ export default function App() {
                   <div className="knowledge-layout">
                     <div className="knowledge-articles">
                       {knowledge.map((article) => (
-                        <article className="knowledge-card panel" key={article.id}>
-                          <span className="knowledge-icon">
-                            <BookOpen size={19} />
-                          </span>
-                          <h2>{article.title}</h2>
+                        <details className="knowledge-card panel" key={article.id}>
+                          <summary>
+                            <BookOpen size={16} />
+                            <h2>{article.title}</h2>
+                            <ChevronRight size={16} />
+                          </summary>
                           <div className="knowledge-body">{article.body}</div>
-                        </article>
+                        </details>
                       ))}
                       {!knowledge.length && (
-                        <Empty icon={<BookOpen />} heading="No knowledge entries available">
+                        <Empty icon={<BookOpen />} heading="No runbooks loaded">
                           Refresh after the service has loaded its operating notes.
                         </Empty>
                       )}
                     </div>
                     <aside className="boundary-card">
                       <Terminal size={22} />
-                      <h3>Deliberately bounded.</h3>
+                      <h3>Runtime limits</h3>
                       <p>
                         Local single-process service.
                         <br />
@@ -1149,9 +1093,7 @@ export default function App() {
                         <br />
                         Model-call limit: <strong>{config.limits.max_model_calls}</strong>
                       </p>
-                      <p className="muted">
-                        Demo roles demonstrate permissions. They are not production authentication.
-                      </p>
+                      <p className="muted">Demo roles are not production authentication.</p>
                     </aside>
                   </div>
                 )}
@@ -1161,9 +1103,9 @@ export default function App() {
           <footer className="main-footer">
             <span>
               <span className="tiny-dot" />{' '}
-              {config ? 'Local workspace · SQLite ledger' : 'Waiting for local service'}
+              {config ? 'SQLite ledger · Local demo' : 'Waiting for local service'}
             </span>
-            <span>RelayOps {config?.version || '0.1'} · Evidence before action</span>
+            <span>RelayOps {config?.version || '0.2'}</span>
           </footer>
         </main>
       </div>
@@ -1246,28 +1188,6 @@ export default function App() {
 
 function casesHaveActive(cases: CaseSummary[]) {
   return cases.some((item) => activeRun({ status: item.latest_run_status || '' }));
-}
-function Metric({
-  icon,
-  value,
-  label: caption,
-  note,
-}: {
-  icon: ReactNode;
-  value: number;
-  label: string;
-  note: string;
-}) {
-  return (
-    <div className="metric-card">
-      <div className="metric-top">
-        <span>{caption}</span>
-        {icon}
-      </div>
-      <strong>{value}</strong>
-      <small>{note}</small>
-    </div>
-  );
 }
 function EvidenceCard({
   item,
@@ -1400,7 +1320,7 @@ function RepairView({ detail }: { detail: CaseDetail }) {
       <p>{repair.explanation}</p>
       <div className="verification-grid">
         <div>
-          <span>ORIGINAL BASELINE</span>
+          <span>Before repair</span>
           <strong>
             {repair.baseline.passed}/{repair.baseline.total}
           </strong>
@@ -1414,7 +1334,7 @@ function RepairView({ detail }: { detail: CaseDetail }) {
               : ''
           }
         >
-          <span>INDEPENDENT VERIFICATION</span>
+          <span>Candidate verification</span>
           <strong>
             {repair.verification.passed}/{repair.verification.total}
           </strong>
